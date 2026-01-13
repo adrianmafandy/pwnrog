@@ -779,7 +779,7 @@ class Console:
   {Colors.GREEN}shell{Colors.RESET}                         Enter interactive shell (requires active session)
   {Colors.GREEN}upgrade{Colors.RESET}                       Upgrade current session to full PTY
   {Colors.GREEN}download <remote> <local>{Colors.RESET}     Download file from target
-  {Colors.GREEN}upload <local> <remote>{Colors.RESET}       Upload file to target
+  {Colors.GREEN}upload <local|url> <remote>{Colors.RESET}       Upload file to target
   {Colors.GREEN}ls [path]{Colors.RESET}                     List local directory
   {Colors.GREEN}pwd{Colors.RESET}                           Print local working directory
   {Colors.GREEN}background{Colors.RESET} / {Colors.GREEN}bg{Colors.RESET}               Background current session
