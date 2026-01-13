@@ -1,4 +1,4 @@
-# 🐸 Pwnrog
+# 😈 Pwnrog
 
 A powerful, feature-rich reverse shell handler with an interactive console, multi-port listeners, session management, and automatic PTY upgrade.
 
