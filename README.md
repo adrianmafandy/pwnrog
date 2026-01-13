@@ -111,6 +111,8 @@ sudo pacman -S xclip
 | `killall` | Kill all listeners and sessions (with confirmation) |
 | `killall listener` | Kill all listeners |
 | `killall session` | Kill all sessions |
+| `history` | Show command history |
+| `history clear` | Clear command history |
 | `exit` / `quit` | Exit pwnrog |
 
 ## Available Payload Types
