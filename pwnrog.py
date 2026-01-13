@@ -595,11 +595,12 @@ class Completer:
             'help', 'sessions', 'session', 'shell', 'upgrade',
             'download', 'upload', 'background', 'bg', 'set',
             'listeners', 'kill', 'killall', 'exit', 'quit',
-            'ls', 'pwd', 'payload', 'payloads'
+            'ls', 'pwd', 'payload', 'payloads', 'history'
         ]
         self.set_options = ['lhost', 'lport']
         self.kill_options = ['listener', 'session']
         self.killall_options = ['listener', 'session']
+        self.history_options = ['clear']
 
     def complete(self, text, state):
         """Readline completer function"""
@@ -682,6 +683,12 @@ class Completer:
                 if not has_type:
                     options.append('type=')
                 matches = [o for o in options if o.startswith(current)]
+        elif parts[0] == 'history':
+            if len(parts) == 1 or (len(parts) == 2 and not buffer.endswith(' ')):
+                prefix = parts[1] if len(parts) > 1 else ''
+                matches = [o for o in self.history_options if o.startswith(prefix)]
+            else:
+                matches = []
         else:
             matches = []
 
@@ -803,6 +810,8 @@ class Console:
   {Colors.GREEN}kill session <id>{Colors.RESET}             Kill a specific session
   {Colors.GREEN}killall listener{Colors.RESET}              Kill all listeners
   {Colors.GREEN}killall session{Colors.RESET}               Kill all sessions
+  {Colors.GREEN}history{Colors.RESET}                       Show command history
+  {Colors.GREEN}history clear{Colors.RESET}                 Clear command history
   {Colors.GREEN}exit{Colors.RESET} / {Colors.GREEN}quit{Colors.RESET}                   Exit
 """)
 
@@ -1115,6 +1124,33 @@ class Console:
             print(f"  - {t}")
         print()
 
+    def cmd_history(self, args):
+        """Show or clear command history"""
+        if args and args[0].lower() == 'clear':
+            # Clear history
+            readline.clear_history()
+            # Also clear the history file
+            try:
+                with open(self.history_file, 'w') as f:
+                    f.write('')
+                done("Command history cleared")
+            except Exception as e:
+                error(f"Failed to clear history file: {e}")
+            return
+        
+        # Show history
+        history_length = readline.get_current_history_length()
+        if history_length == 0:
+            warn("No command history")
+            return
+        
+        print(f"\n{Colors.BOLD}Command History:{Colors.RESET}\n")
+        for i in range(1, history_length + 1):
+            item = readline.get_history_item(i)
+            if item:
+                print(f"  {i:4d}  {item}")
+        print()
+
     def cmd_payload(self, args):
         """Generate reverse shell payload"""
         # Parse arguments
@@ -1227,6 +1263,8 @@ class Console:
                     self.cmd_payload(args)
                 elif cmd == 'payloads':
                     self.cmd_payloads(args)
+                elif cmd == 'history':
+                    self.cmd_history(args)
                 else:
                     error(f"Unknown command: {cmd}. Type 'help' for available commands.")
 
