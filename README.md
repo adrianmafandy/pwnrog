@@ -81,6 +81,7 @@ sudo pacman -S xclip
 | `upgrade` | Upgrade session to full PTY |
 | `download <remote> <local>` | Download file from target |
 | `upload <local\|url> <remote>` | Upload file or download from URL to target |
+| `upload shinju [remote_dir]` | Upload shinju tool (defaults to /tmp) |
 | `background` / `bg` | Background current session |
 | `ls [path]` | List local directory |
 | `pwd` | Print local working directory |

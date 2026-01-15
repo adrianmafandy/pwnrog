@@ -15,6 +15,9 @@ import struct
 import fcntl
 import base64
 import readline
+import shutil
+import tempfile
+import subprocess as sp
 from datetime import datetime
 
 
@@ -58,6 +61,8 @@ class Banner:
 
 class PayloadGenerator:
     """Generate reverse shell payloads for various OS and types"""
+    
+    SHINJU_REPO = "https://github.com/adrianmafandy/shinju.git"
     
     # Linux payloads
     LINUX_PAYLOADS = {
@@ -689,6 +694,12 @@ class Completer:
                 matches = [o for o in self.history_options if o.startswith(prefix)]
             else:
                 matches = []
+        elif parts[0] == 'upload':
+            if len(parts) == 1 or (len(parts) == 2 and not buffer.endswith(' ')):
+                prefix = parts[1] if len(parts) > 1 else ''
+                matches = [o + ' ' for o in ['shinju'] if o.startswith(prefix)]
+            else:
+                matches = []
         else:
             matches = []
 
@@ -786,7 +797,8 @@ class Console:
   {Colors.GREEN}shell{Colors.RESET}                         Enter interactive shell (requires active session)
   {Colors.GREEN}upgrade{Colors.RESET}                       Upgrade current session to full PTY
   {Colors.GREEN}download <remote> <local>{Colors.RESET}     Download file from target
-  {Colors.GREEN}upload <local|url> <remote>{Colors.RESET}       Upload file to target
+  {Colors.GREEN}upload <local|url> <remote>{Colors.RESET}   Upload file to target
+  {Colors.GREEN}upload shinju <remote>{Colors.RESET}        Upload 神樹 tool (default: /tmp)
   {Colors.GREEN}ls [path]{Colors.RESET}                     List local directory
   {Colors.GREEN}pwd{Colors.RESET}                           Print local working directory
   {Colors.GREEN}background{Colors.RESET} / {Colors.GREEN}bg{Colors.RESET}               Background current session
@@ -894,13 +906,44 @@ class Console:
             error("Download failed")
 
     def cmd_upload(self, args):
-        """Upload file to target (supports local files and URLs)"""
+        """Upload file to target (supports local files, URLs, and shinju tool)"""
         if not self.current_session:
             error("No active session. Use 'session <id>' first")
             return
 
+        # Handle 'upload shinju [remote_dir]'
+        if args and args[0] == 'shinju':
+            remote_dir = args[1] if len(args) > 1 else '/tmp'
+            remote_path = f"{remote_dir.rstrip('/')}/shinju.py"
+            
+            info("Cloning 神樹 repository...")
+            tmp_dir = tempfile.mkdtemp()
+            try:
+                result = sp.run(
+                    ['git', 'clone', '--depth', '1', PayloadGenerator.SHINJU_REPO, tmp_dir],
+                    capture_output=True, text=True
+                )
+                if result.returncode != 0:
+                    error(f"Failed to clone 神樹: {result.stderr}")
+                    return
+                
+                shinju_path = os.path.join(tmp_dir, 'shinju.py')
+                if not os.path.exists(shinju_path):
+                    error("shinju.py not found in repository")
+                    return
+                
+                info(f"Uploading shinju.py to {remote_path}...")
+                if self.current_session.upload(shinju_path, remote_path):
+                    done(f"Uploaded shinju.py to {remote_path}")
+                else:
+                    error("Upload failed")
+            finally:
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+            return
+
         if len(args) < 2:
             error("Usage: upload <local_path|url> <remote_path>")
+            error("       upload shinju [remote_dir]")
             return
 
         source, remote_path = args[0], args[1]
