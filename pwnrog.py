@@ -340,11 +340,12 @@ class Session:
                 readable, _, _ = select.select([sys.stdin, self.conn], [], [], 0.1)
 
                 if sys.stdin in readable:
-                    char = sys.stdin.read(1)
-                    if char == '\x1d':  # Ctrl+]
+                    # Read all available bytes to handle escape sequences (arrow keys, etc.)
+                    data = os.read(sys.stdin.fileno(), 1024)
+                    if b'\x1d' in data:  # Ctrl+]
                         break
                     try:
-                        self.conn.send(char.encode())
+                        self.conn.send(data)
                     except:
                         break
 
